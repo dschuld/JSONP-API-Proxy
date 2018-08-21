@@ -14,25 +14,33 @@ import javax.xml.ws.http.HTTPException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
+/**
+ * Main cass acting as the JSONP API proxy.
+ * 
+ * @author David Schuld (davidschuld@gmail.com)
+ *
+ */
+public class JsonpProxy {
 
-public class Jsonp2Json {
-	
 	private static final String JSONP_START_REGEX = "^[A-Za-z0-9]+\\(.*$";
 	private static final String GET = "GET";
-	
+
 	private final JsonpApiCall apiCall;
-	
+
 	@Inject
-	public Jsonp2Json(JsonpApiCall apiCall) {
+	public JsonpProxy(JsonpApiCall apiCall) {
 		this.apiCall = apiCall;
 	}
-	
 
-	public void jsonp2Json(InputStream input, OutputStream output, Context context)
+	/**
+	 * Provides an {@link InputStream} that contains the data returned by the
+	 * requestet API, and an {@link OutputStream} where the transformed data is
+	 * written to.
+	 * 
+	 */
+	@SuppressWarnings("unchecked")
+	public void jsonp2Json(InputStream input, OutputStream output, Logger logger)
 			throws UnsupportedEncodingException, IOException {
-		LambdaLogger logger = context.getLogger();
 		OutputStreamWriter writer = new OutputStreamWriter(output, "UTF-8");
 		logger.log("Input: " + input);
 		JSONObject responseJson = new JSONObject();
@@ -68,5 +76,5 @@ public class Jsonp2Json {
 
 		writer.close();
 	}
-	
+
 }

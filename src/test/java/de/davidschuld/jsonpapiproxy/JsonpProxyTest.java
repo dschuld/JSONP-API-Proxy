@@ -27,18 +27,16 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
  * A simple test harness for locally invoking your Lambda function handler.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class JsonpApiProxyLambdaTest {
+public class JsonpProxyTest {
 
 	@Mock
 	private Context context;
 
-	@Mock
-	private LambdaLogger logger;
 
 	@Mock
 	private JsonpApiCall call;
 	
-	private Jsonp2Json jsonp2Json;
+	private JsonpProxy proxy;
 
 
 	private static final String SAMPLE_INPUT_STRING = "{\"url\": \"http://test.url\"}";
@@ -50,20 +48,19 @@ public class JsonpApiProxyLambdaTest {
 	@Before
 	public void setUp() {
 		MockitoAnnotations.initMocks(this);
-		jsonp2Json = new Jsonp2Json(call);
+		proxy = new JsonpProxy(call);
 
 	}
 
 	@Test
 	public void jsonpApiProxy_JsonOutput() throws IOException {
 
-		when(context.getLogger()).thenReturn(logger);
 		when(call.call(anyString(), anyString())).thenReturn(EXPECTED_OUTPUT_STRING);
 
 		InputStream input = new ByteArrayInputStream(SAMPLE_INPUT_STRING.getBytes());
 		OutputStream output = new ByteArrayOutputStream();
 
-		jsonp2Json.jsonp2Json(input, output, context);
+		proxy.jsonp2Json(input, output, (message) -> System.out.println(message));
 
 		String sampleOutputString = output.toString();
 		Assert.assertEquals(EXPECTED_OUTPUT_STRING, sampleOutputString);
@@ -72,13 +69,12 @@ public class JsonpApiProxyLambdaTest {
 	@Test
 	public void jsonpApiProxy_invalidURL() throws IOException {
 
-		when(context.getLogger()).thenReturn(logger);
 		when(call.call(anyString(), anyString())).thenThrow(new HTTPException(404));
 
 		InputStream input = new ByteArrayInputStream(SAMPLE_INPUT_STRING.getBytes());
 		OutputStream output = new ByteArrayOutputStream();
 
-		jsonp2Json.jsonp2Json(input, output, context);
+		proxy.jsonp2Json(input, output, (message) -> System.out.println(message));
 
 		String sampleOutputString = output.toString();
 		Assert.assertTrue(sampleOutputString.contains("\"statusCode\":404"));
@@ -87,13 +83,12 @@ public class JsonpApiProxyLambdaTest {
 	@Test
 	public void jsonpApiProxy_JsonpOutput() throws IOException {
 
-		when(context.getLogger()).thenReturn(logger);
 		when(call.call(anyString(), anyString())).thenReturn(EXPECTED_JSONP_OUTPUT_STRING);
 
 		InputStream input = new ByteArrayInputStream(SAMPLE_INPUT_STRING.getBytes());
 		OutputStream output = new ByteArrayOutputStream();
 
-		jsonp2Json.jsonp2Json(input, output, context);
+		proxy.jsonp2Json(input, output, (message) -> System.out.println(message));
 
 		String sampleOutputString = output.toString();
 		Assert.assertEquals(EXPECTED_OUTPUT_STRING, sampleOutputString);
@@ -102,13 +97,12 @@ public class JsonpApiProxyLambdaTest {
 	@Test
 	public void jsonpApiProxy_longJsonpOutput() throws IOException {
 
-		when(context.getLogger()).thenReturn(logger);
 		when(call.call(anyString(), anyString())).thenReturn(LONG_JSONP);
 
 		InputStream input = new ByteArrayInputStream(SAMPLE_INPUT_STRING.getBytes());
 		OutputStream output = new ByteArrayOutputStream();
 
-		jsonp2Json.jsonp2Json(input, output, context);
+		proxy.jsonp2Json(input, output, (message) -> System.out.println(message));
 
 		String sampleOutputString = output.toString();
 		Assert.assertEquals(LONG_JSON, sampleOutputString);
